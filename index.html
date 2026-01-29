@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>  ,
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karthikeya Reddy | 3D Portfolio</title>
+  <link rel="stylesheet" href="2.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <canvas id="particles"></canvas>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">K<span>R</span></div>
+      <ul class="nav-menu">
+        <li><a href="#home" class="nav-link active">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#skills" class="nav-link">Skills</a></li>
+        <li><a href="#projects" class="nav-link">Projects</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <div class="profile-card">
+        <div class="card-inner">
+          <img src="IMG_5009.JPG" class="profile-img" alt="Karthikeya Reddy">
+          <div class="glow-ring"></div>
+        </div>
+      </div>
+      <div class="hero-text">
+        <h1 class="title">N. K. V. Karthikeya Reddy</h1>
+        <p class="subtitle">Full Stack Developer & Problem Solver</p>
+        <p class="description">I design and build exceptional digital experiences that combine elegant code with intuitive user interfaces. Specializing in Java backend and modern web technologies.</p>
+        <div class="social-links">
+          <a href="mailto:nkarthikeyar@gmail.com" class="social-btn" title="Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+          <a href="tel:9701631969" class="social-btn" title="Phone">
+            <i class="fas fa-phone"></i>
+          </a>
+          <a href="karthik resume.pdf" download class="social-btn" title="Download Resume">
+            <i class="fas fa-file-pdf"></i>
+          </a>
+          <a href="https://www.linkedin.com/in/karthikeya-reddy-n-667bb9346" class="social-btn" title="LinkedIn" target="_blank">
+            <i class="fas fa-linkedin"></i>
+          </a>
+          <a href="https://www.instagram.com/kalas_karthik/" class="social-btn" title="Instagram" target="_blank">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://www.facebook.com/share/16qCM8NGQ7/" class="social-btn" title="Facebook" target="_blank">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="https://github.com/nkarthikeyar" class="social-btn" title="GitHub" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        </div>
+        <button class="cta-button">Let's Work Together</button>
+      </div>
+    </div>
+    <div class="scroll-indicator">↓</div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="section-header">
+      <h2>About Me</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="about-content">
+      <div class="about-text">
+        <p>I'm a passionate Full Stack Developer with expertise in Java and modern web technologies. With a strong foundation in both frontend and backend development, I create seamless digital experiences that solve real-world problems.</p>
+        <p>Currently pursuing my degree at Unity Degree College (2024-2026), I've honed my skills through practical internships and real-world projects. My journey in tech is driven by curiosity, continuous learning, and a commitment to excellence.</p>
+      </div>
+      <div class="about-stats">
+        <div class="stat-card">
+          <div class="stat-number">5+</div>
+          <div class="stat-label">Projects</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">2+</div>
+          <div class="stat-label">Years Learning</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">8.0</div>
+          <div class="stat-label">CGPA</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Education Section -->
+  <section id="education" class="education">
+    <div class="section-header">
+      <h2>Education</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <h3>Unity Degree College</h3>
+          <p class="timeline-date">2024 - 2026</p>
+          <p>Pursuing degree with strong focus on software development and problem-solving.</p>
+          <span class="badge">CGPA: 8.0</span>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <h3>Behara Polytechnic College</h3>
+          <p class="timeline-date">Completed</p>
+          <p>Solid foundation in engineering principles and technical fundamentals.</p>
+          <span class="badge">73.5%</span>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <h3>Sri Prakash School</h3>
+          <p class="timeline-date">Completed</p>
+          <p>Strong academics with focus on STEM subjects.</p>
+          <span class="badge">9.2 GPA</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="skills">
+    <div class="section-header">
+      <h2>Technical Skills</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fab fa-java"></i></div>
+        <h3>Java</h3>
+        <p>Backend development, OOP, Data Structures</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 85%"></div>
+        </div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fab fa-html5"></i></div>
+        <h3>HTML & CSS</h3>
+        <p>Semantic markup, Responsive design, Animations</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 90%"></div>
+        </div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fab fa-js-square"></i></div>
+        <h3>JavaScript</h3>
+        <p>DOM manipulation, ES6+, Interactive features</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 80%"></div>
+        </div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fas fa-database"></i></div>
+        <h3>Database</h3>
+        <p>SQL, Data management, Backend storage</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 75%"></div>
+        </div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fas fa-tools"></i></div>
+        <h3>Tools & Tech</h3>
+        <p>Git, VS Code, MS Office, Linux</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 85%"></div>
+        </div>
+      </div>
+      <div class="skill-card">
+        <div class="skill-icon"><i class="fas fa-brain"></i></div>
+        <h3>Soft Skills</h3>
+        <p>Leadership, Communication, Problem-solving</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: 88%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section -->
+  <section id="projects" class="projects">
+    <div class="section-header">
+      <h2>Featured Projects</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card">
+        <div class="project-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+          <i class="fas fa-file-contract"></i>
+        </div>
+        <div class="project-content">
+          <h3>Government Registration Form</h3>
+          <p>A secure online registration system with form validation, database integration, and user authentication.</p>
+          <div class="project-tags">
+            <span class="tag">Java</span>
+            <span class="tag">HTML/CSS</span>
+            <span class="tag">Database</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="project-content">
+          <h3>Student Dropout Tracking System</h3>
+          <p>Analytics and reporting system to track student dropouts, analyze trends, and provide insights for intervention.</p>
+          <div class="project-tags">
+            <span class="tag">Full Stack</span>
+            <span class="tag">Analytics</span>
+            <span class="tag">Reporting</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">
+          <i class="fas fa-code"></i>
+        </div>
+        <div class="project-content">
+          <h3>Portfolio Website</h3>
+          <p>Modern, interactive 3D portfolio showcasing projects and skills with smooth animations and responsive design.</p>
+          <div class="project-tags">
+            <span class="tag">HTML</span>
+            <span class="tag">CSS</span>
+            <span class="tag">JavaScript</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Section -->
+  <section id="experience" class="experience">
+    <div class="section-header">
+      <h2>Experience</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="experience-container">
+      <div class="experience-card">
+        <div class="exp-icon"><i class="fas fa-industry"></i></div>
+        <h3>Sahoowala Cylinders</h3>
+        <p class="exp-duration">6 Months Internship</p>
+        <p class="exp-role">Production & Quality Control</p>
+        <ul class="exp-points">
+          <li>Monitored production processes and quality standards</li>
+          <li>Implemented safety protocols and best practices</li>
+          <li>Collaborated with team on efficiency improvements</li>
+        </ul>
+      </div>
+      <div class="experience-card">
+        <div class="exp-icon"><i class="fas fa-bug"></i></div>
+        <h3>Black Bugs</h3>
+        <p class="exp-duration">1 Month Internship</p>
+        <p class="exp-role">Software Testing & Debugging</p>
+        <ul class="exp-points">
+          <li>Performed comprehensive software testing and QA</li>
+          <li>Identified and documented bugs for developer review</li>
+          <li>Created detailed test reports and documentation</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Certifications Section -->
+  <section id="certifications" class="certifications">
+    <div class="section-header">
+      <h2>Certifications</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="cert-grid">
+      <div class="cert-card">
+        <i class="fas fa-certificate"></i>
+        <h3>Java Full Stack Developer</h3>
+        <p>CtrlA IT Services</p>
+        <span class="cert-badge">Completed</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <div class="section-header">
+      <h2>Get In Touch</h2>
+      <div class="header-line"></div>
+    </div>
+    <div class="contact-content">
+      <p>I'm always open to interesting projects and opportunities. Feel free to reach out!</p>
+      <div class="contact-methods">
+        <a href="mailto:nkarthikeyar@gmail.com" class="contact-card">
+          <i class="fas fa-envelope"></i>
+          <h3>Email</h3>
+          <p>nkarthikeyar@gmail.com</p>
+          <span class="contact-hint">Click to send email</span>
+        </a>
+        <a href="tel:+919701631969" class="contact-card">
+          <i class="fas fa-phone"></i>
+          <h3>Phone</h3>
+          <p>+91 9701631969</p>
+          <span class="contact-hint">Click to call</span>
+        </a>
+        <a href="https://www.linkedin.com/in/karthikeya-reddy-n-667bb9346" class="contact-card" target="_blank">
+          <i class="fas fa-linkedin"></i>
+          <h3>LinkedIn</h3>
+          <p>Karthikeya Reddy</p>
+          <span class="contact-hint">Connect on LinkedIn</span>
+        </a>
+        <a href="https://www.instagram.com/kalas_karthik/" class="contact-card" target="_blank">
+          <i class="fab fa-instagram"></i>
+          <h3>Instagram</h3>
+          <p>@kalas_karthik</p>
+          <span class="contact-hint">Follow on Instagram</span>
+        </a>
+        <a href="https://www.facebook.com/share/16qCM8NGQ7/" class="contact-card" target="_blank">
+          <i class="fab fa-facebook"></i>
+          <h3>Facebook</h3>
+          <p>Karthikeya Reddy</p>
+          <span class="contact-hint">Connect on Facebook</span>
+        </a>
+        <a href="https://github.com/nkarthikeyar" class="contact-card" target="_blank">
+          <i class="fab fa-github"></i>
+          <h3>GitHub</h3>
+          <p>nkarthikeyar</p>
+          <span class="contact-hint">View my projects</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2024 Karthikeya Reddy. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="3.js"></script>
+</body>
+</html>
