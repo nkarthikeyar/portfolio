@@ -235,7 +235,8 @@ function publishBlog() {
   submitBtn.textContent = "Publishing...";
   submitBtn.disabled = true;
 
-  fetch("http://localhost:3000/api/blogs", {
+  const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://bloghub-1-bzwp.onrender.com';
+  fetch(apiUrl + "/api/blogs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(blogData)
