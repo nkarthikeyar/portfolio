@@ -8,33 +8,18 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Set proper MIME types for static files
-const mimeTypes = {
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.html': 'text/html',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-  '.eot': 'application/vnd.ms-fontobject'
-};
-
-// Serve static files with correct MIME types
-app.use((req, res, next) => {
-  const ext = path.extname(req.url);
-  if (mimeTypes[ext]) {
-    res.type(mimeTypes[ext]);
+// Serve static files with correct MIME type headers
+app.use(express.static(path.join(__dirname, '.'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
   }
-  next();
-});
-
-app.use(express.static(path.join(__dirname, '.')));
+}));
 
 // Middleware - CORS enabled for all origins
 app.use(cors({
@@ -388,6 +373,19 @@ app.post('/api/blogs/:id/like', async (req, res) => {
       message: 'Error liking blog' 
     });
   }
+});
+
+// Catch-all route for single page app - serve blog.html or signuppage.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signuppage.html'));
+});
+
+app.get('/blog.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'blog.html'));
+});
+
+app.get('/signuppage.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signuppage.html'));
 });
 
 // Start server
