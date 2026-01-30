@@ -8,15 +8,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware - CORS enabled for all origins - Updated
+// Serve static files FIRST (before other middleware)
+app.use(express.static(path.join(__dirname, '.')));
 
+// Middleware - CORS enabled for all origins - Updated
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 app.use(express.json());
-app.use(express.static(__dirname));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://karthikeya:BlogHub2026@cluster0.qb4ufyz.mongodb.net/bloghub?retryWrites=true&w=majority';
