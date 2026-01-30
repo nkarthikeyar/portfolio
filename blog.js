@@ -5,16 +5,13 @@ const API_URL = window.location.hostname === 'localhost'
 
 // ============ SUBMISSION STATE ============
 let isSubmitting = false;
-let isInitialized = false; // Prevent multiple initializations
+let listenersAttached = false;
 
 // ============ PAGE INITIALIZATION ============
-document.addEventListener('DOMContentLoaded', () => {
-  if (isInitialized) return; // Prevent double initialization
-  isInitialized = true;
-  
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Blog page loaded');
   loadUserInfo();
-  initializeEventListeners();
-  setupFormValidation();
+  attachAllListeners();
 });
 
 // ============ USER MANAGEMENT ============
@@ -33,9 +30,31 @@ function logoutUser() {
   window.location.href = '/signuppage.html';
 }
 
-// ============ EVENT LISTENERS SETUP ============
-function initializeEventListeners() {
+// ============ ATTACH ALL EVENT LISTENERS ============
+function attachAllListeners() {
+  // Prevent attaching listeners multiple times
+  if (listenersAttached) {
+    console.log('⚠️ Listeners already attached, skipping');
+    return;
+  }
+  listenersAttached = true;
+  
   const form = document.getElementById('createBlogForm');
+  if (!form) {
+    console.error('❌ Form not found!');
+    return;
+  }
+
+  // CRITICAL: Use 'submit' event directly on form - NO double listeners
+  form.addEventListener('submit', handleFormSubmit, { once: false });
+  console.log('✅ Form submit listener attached');
+
+  // Attach input listeners for live preview
+  attachInputListeners();
+}
+
+// ============ ATTACH INPUT LISTENERS ============
+function attachInputListeners() {
   const titleInput = document.getElementById('blog-title');
   const excerptInput = document.getElementById('blog-excerpt');
   const contentInput = document.getElementById('blog-content');
@@ -43,87 +62,181 @@ function initializeEventListeners() {
   const tagsInput = document.getElementById('blog-tags');
   const imageInput = document.getElementById('blog-image');
 
-  // Form submission - remove any existing listener first
-  if (form) {
-    // Clone and replace form to remove all event listeners
-    const newForm = form.cloneNode(true);
-    form.parentNode.replaceChild(newForm, form);
-    
-    // Add fresh event listener to the new form
-    newForm.addEventListener('submit', handleFormSubmit);
-    
-    // Re-get references to inputs in the cloned form
-    const newTitleInput = newForm.querySelector('#blog-title');
-    const newExcerptInput = newForm.querySelector('#blog-excerpt');
-    const newContentInput = newForm.querySelector('#blog-content');
-    const newCategoryInput = newForm.querySelector('#blog-category');
-    const newTagsInput = newForm.querySelector('#blog-tags');
-    const newImageInput = newForm.querySelector('#blog-image');
+  if (titleInput) {
+    titleInput.addEventListener('input', (e) => {
+      updateCharCounter('titleCount', e.target.value, 150);
+      updatePreview('title', e.target.value);
+    });
+  }
 
-    // Title input - live preview + char counter
-    if (newTitleInput) {
-      newTitleInput.addEventListener('input', (e) => {
-        updateCharCounter('titleCount', e.target.value, 150);
-        updatePreview('title', e.target.value);
-      });
-    }
+  if (excerptInput) {
+    excerptInput.addEventListener('input', (e) => {
+      updateCharCounter('excerptCount', e.target.value, 250);
+      updatePreview('excerpt', e.target.value);
+    });
+  }
 
-    // Excerpt input - live preview + char counter
-    if (newExcerptInput) {
-      newExcerptInput.addEventListener('input', (e) => {
-        updateCharCounter('excerptCount', e.target.value, 250);
-        updatePreview('excerpt', e.target.value);
-      });
-    }
+  if (contentInput) {
+    contentInput.addEventListener('input', (e) => {
+      updateCharCounter('contentCount', e.target.value, 5000);
+      updatePreview('content', e.target.value);
+      updateStats(e.target.value);
+    });
+  }
 
-    // Content input - live preview + stats + char counter
-    if (newContentInput) {
-      newContentInput.addEventListener('input', (e) => {
-        updateCharCounter('contentCount', e.target.value, 5000);
-        updatePreview('content', e.target.value);
-        updateStats(e.target.value);
-      });
-    }
+  if (categoryInput) {
+    categoryInput.addEventListener('change', (e) => {
+      updatePreview('category', e.target.value);
+    });
+  }
 
-    // Category select - live preview
-    if (newCategoryInput) {
-      newCategoryInput.addEventListener('change', (e) => {
-        updatePreview('category', e.target.value);
-      });
-    }
+  if (tagsInput) {
+    tagsInput.addEventListener('input', (e) => {
+      updatePreview('tags', e.target.value);
+    });
+  }
 
-    // Tags input - live preview
-    if (newTagsInput) {
-      newTagsInput.addEventListener('input', (e) => {
-        updatePreview('tags', e.target.value);
-      });
-    }
-
-    // Image input - live preview
-    if (newImageInput) {
-      newImageInput.addEventListener('input', (e) => {
-        updatePreview('image', e.target.value);
-      });
-    }
+  if (imageInput) {
+    imageInput.addEventListener('input', (e) => {
+      updatePreview('image', e.target.value);
+    });
   }
 }
 
 // ============ FORM SUBMIT HANDLER ============
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   e.preventDefault();
-  e.stopImmediatePropagation(); // Stop any other listeners
+  e.stopImmediatePropagation();
   
-  // Prevent double submission
+  console.log('📝 Form submit triggered');
+  
+  // CRITICAL: Check submission lock
   if (isSubmitting) {
+    console.warn('⚠️ Already submitting, blocking double submission');
     alert('⏳ Blog is being published... Please wait!');
     return false;
   }
-  
-  if (validateForm()) {
-    publishBlog();
+
+  // Validate form
+  if (!validateForm()) {
+    console.warn('❌ Form validation failed');
+    return false;
   }
-  
+
+  // Set submission flag IMMEDIATELY
+  isSubmitting = true;
+  console.log('🔒 Submission lock enabled');
+
+  // Disable button
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Publishing...';
+    submitBtn.style.opacity = '0.6';
+  }
+
+  try {
+    // Get form data
+    const title = document.getElementById('blog-title').value.trim();
+    const excerpt = document.getElementById('blog-excerpt').value.trim();
+    const content = document.getElementById('blog-content').value.trim();
+    const category = document.getElementById('blog-category').value.trim();
+    const tags = document.getElementById('blog-tags').value
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag);
+
+    const userEmail = localStorage.getItem('userEmail') || 'unknown@example.com';
+    const userName = localStorage.getItem('userName') || 'Anonymous';
+
+    console.log('📤 Sending blog to server:', { title, category, tags });
+
+    // SINGLE fetch request only
+    const response = await fetch(`${API_URL}/api/blogs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title,
+        excerpt,
+        content,
+        category,
+        tags,
+        author: {
+          name: userName,
+          email: userEmail
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to publish blog');
+    }
+
+    console.log('✅ Blog published successfully!');
+    alert('✅ Blog published successfully!');
+
+    // Reset form
+    document.getElementById('createBlogForm').reset();
+
+    // Reset stats
+    document.getElementById('wordCount').textContent = '0';
+    document.getElementById('charCount').textContent = '0';
+    document.getElementById('readTime').textContent = '0 min';
+
+    // Reset preview
+    document.getElementById('previewTitle').textContent = 'Your captivating title goes here';
+    document.getElementById('previewExcerpt').textContent = 'Your story excerpt will appear here...';
+    document.getElementById('previewCategory').textContent = 'Category';
+    document.getElementById('previewTags').innerHTML = '';
+
+  } catch (error) {
+    console.error('❌ Error publishing blog:', error);
+    alert(`❌ Error: ${error.message}`);
+  } finally {
+    // Always unlock submission
+    isSubmitting = false;
+    console.log('🔓 Submission lock disabled');
+
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
+      submitBtn.style.opacity = '1';
+    }
+  }
+
   return false;
+}
+
+// ============ FORM VALIDATION ============
+function validateForm() {
+  const title = document.getElementById('blog-title').value.trim();
+  const excerpt = document.getElementById('blog-excerpt').value.trim();
+  const content = document.getElementById('blog-content').value.trim();
+  const category = document.getElementById('blog-category').value.trim();
+
+  if (!title) {
+    alert('❌ Please enter a title');
+    return false;
+  }
+  if (!excerpt) {
+    alert('❌ Please enter an excerpt');
+    return false;
+  }
+  if (!content) {
+    alert('❌ Please enter blog content');
+    return false;
+  }
+  if (!category) {
+    alert('❌ Please select a category');
+    return false;
+  }
+
+  return true;
 }
 
 // ============ CHARACTER COUNTER ============
@@ -173,127 +286,6 @@ function updateStats(content) {
   const readTime = Math.ceil(words / 200) || 0;
   document.getElementById('readTime').textContent = `${readTime} min`;
   document.getElementById('previewReadTime').textContent = readTime;
-}
-
-// ============ FORM VALIDATION ============
-function setupFormValidation() {
-  // This function is no longer needed since validation is handled in handleFormSubmit
-  // Keeping it for backward compatibility but not adding duplicate listeners
-}
-
-function validateForm() {
-  const title = document.getElementById('blog-title').value.trim();
-  const excerpt = document.getElementById('blog-excerpt').value.trim();
-  const content = document.getElementById('blog-content').value.trim();
-  const category = document.getElementById('blog-category').value.trim();
-
-  if (!title) {
-    alert('❌ Please enter a title');
-    return false;
-  }
-  if (!excerpt) {
-    alert('❌ Please enter an excerpt');
-    return false;
-  }
-  if (!content) {
-    alert('❌ Please enter blog content');
-    return false;
-  }
-  if (!category) {
-    alert('❌ Please select a category');
-    return false;
-  }
-
-  return true;
-}
-
-// ============ PUBLISH BLOG ============
-async function publishBlog(e) {
-  if (e) e.preventDefault();
-  
-  // Set submission flag
-  isSubmitting = true;
-  
-  // Disable submit button
-  const submitBtn = document.querySelector('button[type="submit"]');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Publishing...';
-  }
-
-  const title = document.getElementById('blog-title').value.trim();
-  const excerpt = document.getElementById('blog-excerpt').value.trim();
-  const content = document.getElementById('blog-content').value.trim();
-  const category = document.getElementById('blog-category').value.trim();
-  const tags = document.getElementById('blog-tags').value
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(tag => tag);
-
-  const userEmail = localStorage.getItem('userEmail') || 'unknown@example.com';
-  const userName = localStorage.getItem('userName') || 'Anonymous';
-
-  if (!title || !excerpt || !content || !category) {
-    alert('❌ Please fill all required fields');
-    isSubmitting = false;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
-    }
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/blogs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        title,
-        excerpt,
-        content,
-        category,
-        tags,
-        author: {
-          name: userName,
-          email: userEmail
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to publish blog');
-    }
-
-    alert('✅ Blog published successfully!');
-    document.getElementById('createBlogForm').reset();
-    
-    // Reset stats
-    document.getElementById('wordCount').textContent = '0';
-    document.getElementById('charCount').textContent = '0';
-    document.getElementById('readTime').textContent = '0 min';
-
-    // Reset preview
-    document.getElementById('previewTitle').textContent = 'Your captivating title goes here';
-    document.getElementById('previewExcerpt').textContent = 'Your story excerpt will appear here...';
-    document.getElementById('previewCategory').textContent = 'Category';
-    document.getElementById('previewTags').innerHTML = '';
-
-  } catch (error) {
-    console.error('❌ Error publishing blog:', error);
-    alert(`❌ Error: ${error.message}`);
-  } finally {
-    // Always reset submission flag and button
-    isSubmitting = false;
-    const submitBtn = document.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
-    }
-  }
 }
 
 // ============ SAVE DRAFT ============
