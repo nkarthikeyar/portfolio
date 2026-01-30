@@ -3,6 +3,9 @@ const API_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000' 
   : 'https://bloghub-1-bzwp.onrender.com';
 
+// ============ SUBMISSION STATE ============
+let isSubmitting = false;
+
 // ============ PAGE INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
   loadUserInfo();
@@ -40,6 +43,13 @@ function initializeEventListeners() {
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      
+      // Prevent double submission
+      if (isSubmitting) {
+        alert('⏳ Blog is being published... Please wait!');
+        return;
+      }
+      
       if (validateForm()) {
         publishBlog();
       }
@@ -182,6 +192,16 @@ function validateForm() {
 // ============ PUBLISH BLOG ============
 async function publishBlog(e) {
   if (e) e.preventDefault();
+  
+  // Set submission flag
+  isSubmitting = true;
+  
+  // Disable submit button
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Publishing...';
+  }
 
   const title = document.getElementById('blog-title').value.trim();
   const excerpt = document.getElementById('blog-excerpt').value.trim();
@@ -197,6 +217,11 @@ async function publishBlog(e) {
 
   if (!title || !excerpt || !content || !category) {
     alert('❌ Please fill all required fields');
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
+    }
     return;
   }
 
@@ -242,6 +267,14 @@ async function publishBlog(e) {
   } catch (error) {
     console.error('❌ Error publishing blog:', error);
     alert(`❌ Error: ${error.message}`);
+  } finally {
+    // Always reset submission flag and button
+    isSubmitting = false;
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
+    }
   }
 }
 
