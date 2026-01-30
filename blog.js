@@ -38,7 +38,12 @@ function initializeEventListeners() {
 
   // Form submission
   if (form) {
-    form.addEventListener('submit', publishBlog);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (validateForm()) {
+        publishBlog();
+      }
+    });
   }
 
   // Title input - live preview + char counter
@@ -171,7 +176,6 @@ function validateForm() {
     return false;
   }
 
-  publishBlog();
   return true;
 }
 
