@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bloghub';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://karthikeya:BlogHub2026@cluster0.qb4ufyz.mongodb.net/bloghub?retryWrites=true&w=majority';
 
 // IMPORTANT: If you get connection error, use MongoDB Atlas instead:
 // 1. Go to https://www.mongodb.com/cloud/atlas/register
