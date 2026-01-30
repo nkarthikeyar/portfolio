@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware - CORS enabled for all origins
+// Middleware - CORS enabled for all origins - Updated
 
 app.use(cors({
   origin: '*',
