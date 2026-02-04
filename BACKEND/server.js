@@ -180,7 +180,6 @@ const blogSchema = new mongoose.Schema({
   }
 });
 
-blogSchema.index({ requestId: 1 }, { unique: true, sparse: true });
 blogSchema.index({ signature: 1, createdAt: -1 });
 
 function computeBlogSignature({ title, content, excerpt, category, tags, authorEmail }) {
