@@ -42,23 +42,45 @@ app.get('/api/debug/blogs', async (req, res) => {
   }
 });
 
-// Explicit asset routes (prevents MIME/404 issues when paths are requested directly)
+// Explicit routes for frontend files in signuppage&blog folder
+app.get('/signuppage.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'signuppage.html'));
+});
+
+app.get('/blog.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.html'));
+});
+
+app.get('/myblogs.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'myblogs.html'));
+});
+
 app.get('/blog.css', (req, res) => {
   res.type('text/css');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, 'blog.css'));
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.css'));
 });
 
 app.get('/blog.js', (req, res) => {
   res.type('application/javascript');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, 'blog.js'));
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.js'));
+});
+
+app.get('/2.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', '2.js'));
+});
+
+app.get('/3.css', (req, res) => {
+  res.type('text/css');
+  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', '3.css'));
 });
 
 // Serve static assets early so CSS/JS requests don't fall through to HTML/404 responses
-const STATIC_ROOT = __dirname;
+const STATIC_ROOT = path.join(__dirname, '..');
 app.use(express.static(STATIC_ROOT, {
-  fallthrough: false,
+  fallthrough: true,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
