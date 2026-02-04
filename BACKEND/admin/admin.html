@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Approval - BlogHub</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="container">
+    <header style="position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>🔐 Admin Approval Dashboard</h1>
+          <p>Review blogs sent by users. Approve to make them live.</p>
+        </div>
+        <div id="notificationBell" style="font-size: 40px; cursor: pointer; position: relative; animation: bellRing 2s infinite;">
+          🔔
+          <span id="notificationBadge" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; min-width: 28px; height: 28px; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; padding: 0 6px;">0</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="auth">
+      <label for="adminKey">Admin Key</label>
+      <div class="row">
+        <input type="password" id="adminKey" placeholder="Enter admin key" />
+        <button id="saveKeyBtn">Save Key</button>
+      </div>
+      <small id="keyStatus"></small>
+    </section>
+
+    <section class="notifications">
+      <div class="stat-card">
+        <h3>📨 Blogs Waiting Approval</h3>
+        <div class="stat-number" id="pendingBlogsCount">0</div>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Users have sent these blogs for your review</p>
+      </div>
+      <div class="stat-card">
+        <h3>👥 Users to Approve</h3>
+        <div class="stat-number" id="pendingUsersCount">0</div>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">New user signups (auto-approved)</p>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="refreshBtn" class="btn-refresh">🔄 Auto-Refresh (Every 5 Seconds)</button>
+    </section>
+
+    <section>
+      <h2>📨 APPROVAL REQUESTS - Blogs Sent by Users</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">Users have sent these blogs for your approval. Click "✓ Approve" to make them live in the system.</p>
+      <div id="blogsList" class="list"></div>
+    </section>
+
+    <section>
+      <h2>👥 New User Signups</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px;">Note: Users are auto-approved on signup. This section shows for reference only.</p>
+      <div id="usersList" class="list"></div>
+    </section>
+  </div>
+
+  <script>
+    window.BACKEND_URL = window.location.origin;
+  </script>
+  <script src="admin.js"></script>
+</body>
+</html>

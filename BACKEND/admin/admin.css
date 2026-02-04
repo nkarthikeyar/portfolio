@@ -1,0 +1,158 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+section {
+  background: #111827;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #1f2937;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button.btn-refresh {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.notifications {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  padding: 16px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  margin: 0 0 8px;
+  color: #cbd5f5;
+  font-size: 14px;
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.actions {
+  text-align: center;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  padding: 14px;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+}
+
+.card-content h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.card-content p {
+  margin: 4px 0;
+  color: #cbd5f5;
+  font-size: 13px;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-actions button {
+  padding: 8px 12px;
+  font-size: 13px;
+  min-width: 80px;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+button.danger:hover {
+  background: #b91c1c;
+}
+
+small {
+  color: #94a3b8;
+  display: block;
+  margin-top: 6px;
+}
