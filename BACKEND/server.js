@@ -22,6 +22,26 @@ app.get('/health', (req, res) => {
   res.status(200).json({ ok: true, service: 'bloghub', time: new Date().toISOString() });
 });
 
+// Test endpoint to check database state
+app.get('/api/debug/blogs', async (req, res) => {
+  try {
+    const allBlogs = await Blog.find({}).select('title status author createdAt');
+    const approved = await Blog.countDocuments({ status: 'approved' });
+    const pending = await Blog.countDocuments({ status: 'pending' });
+    const rejected = await Blog.countDocuments({ status: 'rejected' });
+    
+    res.json({
+      total: allBlogs.length,
+      approved,
+      pending,
+      rejected,
+      blogs: allBlogs
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Explicit asset routes (prevents MIME/404 issues when paths are requested directly)
 app.get('/blog.css', (req, res) => {
   res.type('text/css');
