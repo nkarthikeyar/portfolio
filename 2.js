@@ -9,6 +9,10 @@ function showLoginForm() {
   }
 }
 
+const API_URL = window.BACKEND_URL || (window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://your-backend-url');
+
 // Show Signup Form
 function showSignupForm() {
   document.getElementById("loginForm").style.display = "none";
@@ -160,8 +164,7 @@ document.getElementById("signupForm").addEventListener("submit", function (e) {
     submitBtn.textContent = "Creating Account...";
     submitBtn.disabled = true;
 
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://bloghub-1-bzwp.onrender.com';
-    fetch(apiUrl + "/api/signup", {
+    fetch(API_URL + "/api/signup", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(userData),
@@ -216,8 +219,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
     submitBtn.textContent = "Signing In...";
     submitBtn.disabled = true;
 
-    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://bloghub-1-bzwp.onrender.com';
-    fetch(apiUrl + "/api/login", {
+    fetch(API_URL + "/api/login", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(loginData),
@@ -288,8 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
         submitBtn.textContent = "Publishing...";
         submitBtn.disabled = true;
 
-        const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://bloghub-1-bzwp.onrender.com';
-        fetch(apiUrl + "/api/blogs", {
+        fetch(API_URL + "/api/blogs", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(blogData),

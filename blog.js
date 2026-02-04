@@ -1,7 +1,7 @@
 // ============ API CONFIGURATION ============
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : 'https://bloghub-1-bzwp.onrender.com';
+const API_URL = window.BACKEND_URL || (window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : window.location.origin);
 
 // ============ SUBMISSION STATE ============
 let isSubmitting = false;
@@ -167,11 +167,7 @@ async function handleFormSubmit(e) {
   const submitBtn = document.querySelector('button[type="submit"]');
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Publishing...';
-    submitBtn.style.opacity = '0.6';
-  }
-
-  try {
+      submitBtn.textContent = '⏳ Sending to Admin...';
     // Get form data
     const title = document.getElementById('blog-title').value.trim();
     const excerpt = document.getElementById('blog-excerpt').value.trim();
@@ -199,54 +195,64 @@ async function handleFormSubmit(e) {
 
     console.log('📤 Sending blog to server:', { title, category, tags });
 
-    // SINGLE fetch request only
-    const response = await fetch(`${API_URL}/api/blogs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-Id': requestId
-      },
-      body: JSON.stringify({
-        requestId,
-        title,
-        excerpt,
-        content,
-        category,
-        tags,
-        author: {
-          name: userName,
-          email: userEmail
+    try {
+      // SINGLE fetch request only
+      const response = await fetch(`${API_URL}/api/blogs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-Id': requestId
+        },
+        body: JSON.stringify({
+          requestId,
+          title,
+          excerpt,
+          content,
+          category,
+          tags,
+          author: {
+            name: userName,
+            email: userEmail
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to publish blog');
+      }
+
+      console.log('✅ Server response:', data);
+      
+      // Show success modal with admin approval message
+      showApprovalModal(title);
+
+      // Reset form
+      document.getElementById('createBlogForm').reset();
+
+      // Reset stats
+      document.getElementById('wordCount').textContent = '0';
+      document.getElementById('charCount').textContent = '0';
+      document.getElementById('readTime').textContent = '0 min';
+
+      // Reset preview
+      document.getElementById('previewTitle').textContent = 'Your captivating title goes here';
+      document.getElementById('previewExcerpt').textContent = 'Your story excerpt will appear here...';
+      document.getElementById('previewCategory').textContent = 'Category';
+      document.getElementById('previewTags').innerHTML = '';
+      
+      // Reload blogs list
+      setTimeout(() => {
+        if (typeof loadMyBlogsInline === 'function') {
+          loadMyBlogsInline();
         }
-      })
-    });
+      }, 1000);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to publish blog');
-    }
-
-    console.log('✅ Server response:', data);
-    showToast(data.message || '✅ Blog published successfully!');
-
-    // Reset form
-    document.getElementById('createBlogForm').reset();
-
-    // Reset stats
-    document.getElementById('wordCount').textContent = '0';
-    document.getElementById('charCount').textContent = '0';
-    document.getElementById('readTime').textContent = '0 min';
-
-    // Reset preview
-    document.getElementById('previewTitle').textContent = 'Your captivating title goes here';
-    document.getElementById('previewExcerpt').textContent = 'Your story excerpt will appear here...';
-    document.getElementById('previewCategory').textContent = 'Category';
-    document.getElementById('previewTags').innerHTML = '';
-
-  } catch (error) {
-    console.error('❌ Error publishing blog:', error);
-    alert(`❌ Error: ${error.message}`);
-  } finally {
+    } catch (error) {
+      console.error('❌ Error publishing blog:', error);
+      alert(`❌ Error: ${error.message}`);
+    } finally {
     // Always unlock submission
     isSubmitting = false;
     console.log('🔓 Submission lock disabled');
@@ -254,7 +260,7 @@ async function handleFormSubmit(e) {
     const submitBtn = document.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Publish Story';
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send to Admin for Approval';
       submitBtn.style.opacity = '1';
     }
   }
@@ -392,3 +398,107 @@ window.addEventListener('click', (e) => {
     modal.style.display = 'none';
   }
 });
+
+// ============ APPROVAL MODAL ============
+function showApprovalModal(blogTitle) {
+  // Create modal if not exists
+  let modal = document.getElementById('approvalModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'approvalModal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(4px);
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #3b82f6;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.4s ease-out;
+    ">
+      <div style="font-size: 48px; margin-bottom: 20px;">📨</div>
+      <h2 style="color: white; margin: 20px 0; font-size: 28px;">Sent to Admin!</h2>
+      <p style="color: #cbd5e1; margin: 20px 0; line-height: 1.6;">
+        Your blog "<strong style="color: #3b82f6;">${blogTitle}</strong>" has been <strong>sent to the admin for approval</strong>.
+      </p>
+      <div style="background: #1e40af; padding: 15px; border-radius: 12px; margin: 20px 0;">
+        <p style="color: #e0e7ff; margin: 0; font-size: 14px;">
+          ✓ Your blog is safe in the database<br>
+          👨‍💼 Admin will review it shortly<br>
+          ✅ You'll see it approved in "My Blogs"
+        </p>
+      </div>
+      <p style="color: #94a3b8; margin: 15px 0; font-size: 14px;">
+        Check your "My Blogs" page to see the approval status
+      </p>
+      <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+        <button onclick="closeApprovalModal()" style="
+          background: #3b82f6;
+          color: white;
+          padding: 12px 24px;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 600;
+        ">✓ Got It</button>
+        <a href="myblogs.html" style="
+          background: #1e40af;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 12px;
+          text-decoration: none;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        ">📖 View My Blogs</a>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+
+  // Add CSS animation
+  if (!document.getElementById('approvalModalStyle')) {
+    const style = document.createElement('style');
+    style.id = 'approvalModalStyle';
+    style.textContent = `
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+function closeApprovalModal() {
+  const modal = document.getElementById('approvalModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}

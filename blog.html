@@ -35,6 +35,9 @@
           </div>
         </div>
         <div class="user-section">
+          <a href="/admin/admin.html" class="btn-admin" style="background: #7c3aed; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; margin-right: 10px; display: inline-block;" target="_blank">
+            <i class="fas fa-user-shield"></i> Admin
+          </a>
           <div class="user-avatar">
             <i class="fas fa-user-circle"></i>
           </div>
@@ -199,7 +202,7 @@ Write freely and let your creativity flow. Your readers are waiting to hear your
             <!-- Action Buttons -->
             <div class="action-buttons">
               <button type="submit" class="btn-primary">
-                <i class="fas fa-rocket"></i> Publish Story
+                <i class="fas fa-paper-plane"></i> Send to Admin for Approval
               </button>
               <button type="button" class="btn-secondary" onclick="saveDraft()">
                 <i class="fas fa-save"></i> Save Draft
@@ -246,6 +249,19 @@ Write freely and let your creativity flow. Your readers are waiting to hear your
     </main>
   </div>
 
+  <!-- My Blogs Section -->
+  <section style="max-width: 1200px; margin: 40px auto; padding: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: white; margin: 0;">My Blogs</h2>
+      <button onclick="document.getElementById('createBlogForm').scrollIntoView({behavior: 'smooth'})" style="background: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;">
+        <i class="fas fa-arrow-up"></i> Write New Blog
+      </button>
+    </div>
+    <div id="myBlogsList" style="display: grid; gap: 20px;">
+      <p style="color: #94a3b8;">Loading your blogs...</p>
+    </div>
+  </section>
+
   <!-- Preview Modal -->
   <div id="previewModal" class="modal-overlay" style="display: none;">
     <div class="modal-container">
@@ -272,6 +288,64 @@ Write freely and let your creativity flow. Your readers are waiting to hear your
     </div>
   </div>
 
+  <script>
+    window.BACKEND_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
+    
+    // Load user's blogs on page load
+    function loadMyBlogsInline() {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) return;
+      
+      const API_URL = window.BACKEND_URL;
+      const blogsList = document.getElementById('myBlogsList');
+      
+      fetch(`${API_URL}/api/blogs?userEmail=${encodeURIComponent(userEmail)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.blogs) {
+            const myBlogs = data.blogs.filter(blog => 
+              blog.author?.email?.toLowerCase() === userEmail.toLowerCase()
+            );
+            
+            if (myBlogs.length === 0) {
+              blogsList.innerHTML = '<p style="color: #94a3b8;">You haven\'t written any blogs yet. Start writing above!</p>';
+              return;
+            }
+            
+            blogsList.innerHTML = myBlogs.map(blog => {
+              const statusBadge = blog.status === 'approved' 
+                ? '<span style="background: #166534; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">✓ Approved</span>'
+                : '<span style="background: #92400e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">⏳ Pending Approval</span>';
+              
+              return `
+                <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+                  <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <h3 style="color: white; margin: 0;">${blog.title}</h3>
+                    ${statusBadge}
+                  </div>
+                  <p style="color: #cbd5e1; margin: 10px 0;">${blog.excerpt}</p>
+                  <div style="display: flex; gap: 10px; color: #94a3b8; font-size: 13px;">
+                    <span>📁 ${blog.category || 'Uncategorized'}</span>
+                    <span>📅 ${new Date(blog.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            blogsList.innerHTML = '<p style="color: #f87171;">Error loading blogs</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          blogsList.innerHTML = '<p style="color: #f87171;">Failed to load blogs</p>';
+        });
+    }
+    
+    // Load blogs when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(loadMyBlogsInline, 1000);
+    });
+  </script>
   <script src="blog.js"></script>
 </body>
 </html>

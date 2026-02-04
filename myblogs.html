@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Blogs - BlogHub</title>
+  <link rel="stylesheet" href="blog.css">
+</head>
+<body>
+  <div class="blog-container">
+    <header class="premium-header">
+      <div class="header-top">
+        <div class="logo-section">
+          <div class="logo-icon">
+            <i class="fas fa-feather"></i>
+          </div>
+          <div class="logo-text">
+            <h1>BlogHub</h1>
+            <p>My Blogs</p>
+          </div>
+        </div>
+        <div class="user-section">
+          <span class="user-name" id="currentUser">User</span>
+          <a href="/admin/admin.html" class="btn-admin" style="background: #7c3aed; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; margin-right: 10px; display: inline-block;" target="_blank">
+            <i class="fas fa-user-shield"></i> Admin
+          </a>
+          <button class="logout-btn" onclick="logoutUser()">Logout</button>
+          <a href="blog.html" class="btn-new-blog">+ New Blog</a>
+        </div>
+      </div>
+    </header>
+
+    <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+      <h2 style="color: white; margin-bottom: 20px;">My Blogs</h2>
+      <div id="blogsList" style="display: grid; gap: 20px;">
+        <p style="color: #94a3b8;">Loading your blogs...</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_URL = window.BACKEND_URL || 'http://localhost:3000';
+
+    function loadUserInfo() {
+      const userName = localStorage.getItem('userName');
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!userName || !userEmail) {
+        window.location.href = 'signuppage.html';
+        return;
+      }
+      
+      document.getElementById('currentUser').textContent = userName;
+      loadMyBlogs(userEmail);
+    }
+
+    async function loadMyBlogs(userEmail) {
+      const blogsList = document.getElementById('blogsList');
+      
+      try {
+        const response = await fetch(`${API_URL}/api/blogs?userEmail=${encodeURIComponent(userEmail)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const myBlogs = data.blogs.filter(blog => 
+            blog.author?.email?.toLowerCase() === userEmail.toLowerCase()
+          );
+          
+          if (myBlogs.length === 0) {
+            blogsList.innerHTML = '<p style="color: #94a3b8;">You haven\'t written any blogs yet. <a href="blog.html" style="color: #2563eb;">Write your first blog!</a></p>';
+            return;
+          }
+          
+          blogsList.innerHTML = myBlogs.map(blog => {
+            const statusBadge = blog.status === 'approved' 
+              ? '<span style="background: #166534; padding: 4px 12px; border-radius: 20px; font-size: 12px;">✓ Approved</span>'
+              : '<span style="background: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 12px;">⏳ Pending Approval</span>';
+            
+            return `
+              <div style="background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                  <h3 style="color: white; margin: 0;">${blog.title}</h3>
+                  ${statusBadge}
+                </div>
+                <p style="color: #cbd5e1; margin: 10px 0;">${blog.excerpt}</p>
+                <div style="display: flex; gap: 10px; color: #94a3b8; font-size: 13px;">
+                  <span>📁 ${blog.category || 'Uncategorized'}</span>
+                  <span>📅 ${new Date(blog.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          blogsList.innerHTML = '<p style="color: #f87171;">Error loading blogs</p>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        blogsList.innerHTML = '<p style="color: #f87171;">Failed to load blogs. Make sure server is running.</p>';
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      window.location.href = 'signuppage.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', loadUserInfo);
+  </script>
+</body>
+</html>
