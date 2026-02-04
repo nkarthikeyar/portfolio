@@ -77,6 +77,21 @@ app.get('/3.css', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'signuppage&blog', '3.css'));
 });
 
+// Admin routes
+app.get('/admin/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin', 'admin.html'));
+});
+
+app.get('/admin/admin.css', (req, res) => {
+  res.type('text/css');
+  res.sendFile(path.join(__dirname, 'admin', 'admin.css'));
+});
+
+app.get('/admin/admin.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'admin', 'admin.js'));
+});
+
 // Serve static assets early so CSS/JS requests don't fall through to HTML/404 responses
 const STATIC_ROOT = path.join(__dirname, '..');
 app.use(express.static(STATIC_ROOT, {
