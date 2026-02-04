@@ -107,6 +107,7 @@ module.exports = function createAdminRouter({ User, Blog, PendingBlog, requireAd
         content: pending.content,
         excerpt: pending.excerpt,
         category: pending.category,
+        imageUrl: pending.imageUrl,
         signature: pending.signature,
         requestId: pending.requestId,
         author: pending.author,

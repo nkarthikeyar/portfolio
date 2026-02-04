@@ -31,20 +31,39 @@ app.get('/health', (req, res) => {
   res.status(200).json({ ok: true, service: 'bloghub', time: new Date().toISOString() });
 });
 
+const FRONTEND_ROOT = path.join(__dirname, '..', 'signuppage&blog');
+
 // Explicit asset routes (prevents MIME/404 issues when paths are requested directly)
 app.get('/blog.css', (req, res) => {
   res.type('text/css');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, 'blog.css'));
+  res.sendFile(path.join(FRONTEND_ROOT, 'blog.css'));
 });
 
 app.get('/blog.js', (req, res) => {
   res.type('application/javascript');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, 'blog.js'));
+  res.sendFile(path.join(FRONTEND_ROOT, 'blog.js'));
 });
 
-// Serve static assets early so CSS/JS requests don't fall through to HTML/404 responses
+// Serve frontend assets first (fallthrough so admin/static can handle other paths)
+app.use(express.static(FRONTEND_ROOT, {
+  fallthrough: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    } else if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    }
+  }
+}));
+
+// Serve backend/admin assets
 const STATIC_ROOT = __dirname;
 app.use(express.static(STATIC_ROOT, {
   fallthrough: false,
@@ -136,6 +155,10 @@ const blogSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  imageUrl: {
+    type: String,
+    trim: true
+  },
   requestId: {
     type: String,
     unique: true,
@@ -195,6 +218,10 @@ const pendingBlogSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  imageUrl: {
+    type: String,
+    trim: true
+  },
   requestId: {
     type: String,
     unique: true,
@@ -220,12 +247,13 @@ const pendingBlogSchema = new mongoose.Schema({
 
 pendingBlogSchema.index({ signature: 1, createdAt: -1 });
 
-function computeBlogSignature({ title, content, excerpt, category, tags, authorEmail }) {
+function computeBlogSignature({ title, content, excerpt, category, tags, authorEmail, imageUrl }) {
   const normalized = {
     title: (title || '').trim(),
     content: (content || '').trim(),
     excerpt: (excerpt || '').trim(),
     category: (category || '').trim(),
+    imageUrl: (imageUrl || '').trim(),
     tags: Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean).sort() : [],
     authorEmail: (authorEmail || '').trim().toLowerCase()
   };
@@ -345,7 +373,7 @@ app.get('/api/users', async (req, res) => {
 app.post('/api/blogs', async (req, res) => {
   try {
     const requestId = req.get('x-request-id') || req.body.requestId;
-    const { title, content, excerpt, author, tags, category } = req.body;
+    const { title, content, excerpt, author, tags, category, imageUrl } = req.body;
 
     if (!title || !content || !excerpt) {
       return res.status(400).json({
@@ -367,6 +395,7 @@ app.post('/api/blogs', async (req, res) => {
       content,
       excerpt,
       category,
+      imageUrl,
       tags,
       authorEmail: author?.email
     });
@@ -397,6 +426,7 @@ app.post('/api/blogs', async (req, res) => {
             category,
             author,
             tags: tags || [],
+            imageUrl,
             status: 'pending'
           }
         },
@@ -438,6 +468,7 @@ app.post('/api/blogs', async (req, res) => {
       signature,
       author,
       tags: tags || [],
+      imageUrl,
       status: 'pending'
     });
 
@@ -664,15 +695,19 @@ app.use('/api/admin', createAdminRouter({
 
 // Catch-all route for single page app - serve blog.html or signuppage.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'signuppage.html'));
+  res.sendFile(path.join(FRONTEND_ROOT, 'signuppage.html'));
 });
 
 app.get('/blog.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'blog.html'));
+  res.sendFile(path.join(FRONTEND_ROOT, 'blog.html'));
+});
+
+app.get('/myblogs.html', (req, res) => {
+  res.sendFile(path.join(FRONTEND_ROOT, 'myblogs.html'));
 });
 
 app.get('/signuppage.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'signuppage.html'));
+  res.sendFile(path.join(FRONTEND_ROOT, 'signuppage.html'));
 });
 
 // Final fallback: avoid Express default HTML 404 (prevents MIME-type confusion in browsers)

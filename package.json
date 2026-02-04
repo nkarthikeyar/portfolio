@@ -1,0 +1,12 @@
+{
+  "name": "bloghub-root",
+  "version": "1.0.0",
+  "description": "BlogHub - Root wrapper",
+  "scripts": {
+    "start": "cd BACKEND && npm start",
+    "install": "cd BACKEND && npm install"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
