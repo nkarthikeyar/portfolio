@@ -241,13 +241,6 @@ async function handleFormSubmit(e) {
       document.getElementById('previewExcerpt').textContent = 'Your story excerpt will appear here...';
       document.getElementById('previewCategory').textContent = 'Category';
       document.getElementById('previewTags').innerHTML = '';
-      
-      // Reload blogs list
-      setTimeout(() => {
-        if (typeof loadMyBlogsInline === 'function') {
-          loadMyBlogsInline();
-        }
-      }, 1000);
 
     } catch (error) {
       console.error('❌ Error publishing blog:', error);
@@ -501,4 +494,5 @@ function closeApprovalModal() {
   if (modal) {
     modal.style.display = 'none';
   }
+}
 }
