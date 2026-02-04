@@ -1,5 +1,16 @@
 {
+  "name": "bloghub-project",
+  "version": "1.0.0",
+  "description": "BlogHub full-stack application",
+  "scripts": {
+    "install-backend": "cd BACKEND && npm install",
+    "start": "cd BACKEND && node server.js",
+    "postinstall": "npm run install-backend"
+  },
   "dependencies": {
     "dotenv": "^17.2.3"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
