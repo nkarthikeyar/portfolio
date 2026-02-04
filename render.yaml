@@ -2,6 +2,7 @@ services:
   - type: web
     name: bloghub-backend
     env: node
+    rootDir: BACKEND
     buildCommand: npm install
     startCommand: npm start
     autoDeploy: true
