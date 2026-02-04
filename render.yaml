@@ -1,13 +1,8 @@
 services:
   - type: web
-    name: bloghub
-    runtime: node
-    plan: free
+    name: bloghub-backend
+    env: node
+    rootDir: BACKEND
     buildCommand: npm install
     startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      # Set this in Render dashboard (recommended) rather than committing secrets:
-      # - key: MONGODB_URI
-      #   value: <your-mongodb-uri>
+    autoDeploy: true

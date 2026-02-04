@@ -5,9 +5,11 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const crypto = require('crypto');
+const createAdminRouter = require('./admin/routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
 // Middleware - CORS enabled for all origins
 app.use(cors({
@@ -16,86 +18,36 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+function requireAdmin(req, res, next) {
+  const key = req.get('x-admin-key');
+  if (!key || key !== ADMIN_KEY) {
+    return res.status(401).json({ success: false, message: 'Invalid admin key' });
+  }
+  next();
+}
 
 // Simple health check (useful for Render verification)
 app.get('/health', (req, res) => {
   res.status(200).json({ ok: true, service: 'bloghub', time: new Date().toISOString() });
 });
 
-// Test endpoint to check database state
-app.get('/api/debug/blogs', async (req, res) => {
-  try {
-    const allBlogs = await Blog.find({}).select('title status author createdAt');
-    const approved = await Blog.countDocuments({ status: 'approved' });
-    const pending = await Blog.countDocuments({ status: 'pending' });
-    const rejected = await Blog.countDocuments({ status: 'rejected' });
-    
-    res.json({
-      total: allBlogs.length,
-      approved,
-      pending,
-      rejected,
-      blogs: allBlogs
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Explicit routes for frontend files in signuppage&blog folder
-app.get('/signuppage.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'signuppage.html'));
-});
-
-app.get('/blog.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.html'));
-});
-
-app.get('/myblogs.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'myblogs.html'));
-});
-
+// Explicit asset routes (prevents MIME/404 issues when paths are requested directly)
 app.get('/blog.css', (req, res) => {
   res.type('text/css');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.css'));
+  res.sendFile(path.join(__dirname, 'blog.css'));
 });
 
 app.get('/blog.js', (req, res) => {
   res.type('application/javascript');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', 'blog.js'));
-});
-
-app.get('/2.js', (req, res) => {
-  res.type('application/javascript');
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', '2.js'));
-});
-
-app.get('/3.css', (req, res) => {
-  res.type('text/css');
-  res.sendFile(path.join(__dirname, '..', 'signuppage&blog', '3.css'));
-});
-
-// Admin routes
-app.get('/admin/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin', 'admin.html'));
-});
-
-app.get('/admin/admin.css', (req, res) => {
-  res.type('text/css');
-  res.sendFile(path.join(__dirname, 'admin', 'admin.css'));
-});
-
-app.get('/admin/admin.js', (req, res) => {
-  res.type('application/javascript');
-  res.sendFile(path.join(__dirname, 'admin', 'admin.js'));
+  res.sendFile(path.join(__dirname, 'blog.js'));
 });
 
 // Serve static assets early so CSS/JS requests don't fall through to HTML/404 responses
-const STATIC_ROOT = path.join(__dirname, '..');
+const STATIC_ROOT = __dirname;
 app.use(express.static(STATIC_ROOT, {
-  fallthrough: true,
+  fallthrough: false,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
@@ -154,6 +106,14 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  approved: {
+    type: Boolean,
+    default: true
+  },
+  approvedAt: {
+    type: Date,
+    default: Date.now
   }
 });
 
@@ -182,23 +142,13 @@ const blogSchema = new mongoose.Schema({
     sparse: true
   },
   signature: {
-    type: String,
-    index: true
+    type: String
   },
   author: {
     name: String,
     email: String
   },
   tags: [String],
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
-  approvedAt: {
-    type: Date,
-    default: null
-  },
   likes: {
     type: Number,
     default: 0
@@ -211,6 +161,14 @@ const blogSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  status: {
+    type: String,
+    default: 'approved'
+  },
+  approvedAt: {
+    type: Date,
+    default: Date.now
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -218,6 +176,49 @@ const blogSchema = new mongoose.Schema({
 });
 
 blogSchema.index({ signature: 1, createdAt: -1 });
+
+const pendingBlogSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    trim: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  excerpt: {
+    type: String,
+    required: true
+  },
+  requestId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  signature: {
+    type: String
+  },
+  author: {
+    name: String,
+    email: String
+  },
+  tags: [String],
+  status: {
+    type: String,
+    default: 'pending'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+pendingBlogSchema.index({ signature: 1, createdAt: -1 });
 
 function computeBlogSignature({ title, content, excerpt, category, tags, authorEmail }) {
   const normalized = {
@@ -233,6 +234,7 @@ function computeBlogSignature({ title, content, excerpt, category, tags, authorE
 
 const User = mongoose.model('User', userSchema);
 const Blog = mongoose.model('Blog', blogSchema);
+const PendingBlog = mongoose.model('PendingBlog', pendingBlogSchema);
 
 // ==================== USER ROUTES ====================
 
@@ -319,141 +321,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ============ ADMIN ROUTES ============
-// Admin middleware to check API key
-function requireAdmin(req, res, next) {
-  const apiKey = req.get('x-admin-key');
-  const expectedKey = process.env.ADMIN_API_KEY || 'your_secret_admin_key_here_123';
-  
-  if (!apiKey || apiKey !== expectedKey) {
-    return res.status(403).json({ 
-      success: false, 
-      message: 'Unauthorized: Invalid admin key' 
-    });
-  }
-  next();
-}
-
-// Get notifications count for admin
-app.get('/api/notifications', requireAdmin, async (req, res) => {
-  try {
-    const pendingBlogs = await Blog.countDocuments({ status: 'pending' });
-    const pendingUsers = await User.countDocuments({ approved: false });
-    
-    res.json({
-      success: true,
-      pendingBlogs,
-      pendingUsers,
-      total: pendingBlogs + pendingUsers
-    });
-  } catch (error) {
-    console.error('Notifications error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching notifications' });
-  }
-});
-
-// Get pending blogs for admin
-app.get('/api/admin/blogs/pending', requireAdmin, async (req, res) => {
-  try {
-    const blogs = await Blog.find({ status: 'pending' }).sort({ createdAt: -1 });
-    res.json({ success: true, count: blogs.length, blogs });
-  } catch (error) {
-    console.error('Admin get pending blogs error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching pending blogs' });
-  }
-});
-
-// Approve blog
-app.post('/api/admin/blogs/:id/approve', requireAdmin, async (req, res) => {
-  try {
-    const blog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      { status: 'approved', approvedAt: new Date() },
-      { new: true }
-    );
-
-    if (!blog) {
-      return res.status(404).json({ success: false, message: 'Blog not found' });
-    }
-
-    res.json({ success: true, message: 'Blog approved and published!', blog });
-  } catch (error) {
-    console.error('Admin approve blog error:', error);
-    res.status(500).json({ success: false, message: 'Error approving blog' });
-  }
-});
-
-// Reject blog
-app.post('/api/admin/blogs/:id/reject', requireAdmin, async (req, res) => {
-  try {
-    const blog = await Blog.findByIdAndUpdate(
-      req.params.id,
-      { status: 'rejected', approvedAt: null },
-      { new: true }
-    );
-
-    if (!blog) {
-      return res.status(404).json({ success: false, message: 'Blog not found' });
-    }
-
-    res.json({ success: true, message: 'Blog rejected', blog });
-  } catch (error) {
-    console.error('Admin reject blog error:', error);
-    res.status(500).json({ success: false, message: 'Error rejecting blog' });
-  }
-});
-
-// Get pending users for admin
-app.get('/api/admin/users/pending', requireAdmin, async (req, res) => {
-  try {
-    const users = await User.find({ approved: false }, '-password').sort({ createdAt: -1 });
-    res.json({ success: true, count: users.length, users });
-  } catch (error) {
-    console.error('Admin get pending users error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching pending users' });
-  }
-});
-
-// Approve user
-app.post('/api/admin/users/:id/approve', requireAdmin, async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { approved: true, approvedAt: new Date() },
-      { new: true, select: '-password' }
-    );
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    res.json({ success: true, message: 'User approved', user });
-  } catch (error) {
-    console.error('Admin approve user error:', error);
-    res.status(500).json({ success: false, message: 'Error approving user' });
-  }
-});
-
-// Reject user
-app.post('/api/admin/users/:id/reject', requireAdmin, async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { approved: false, approvedAt: null },
-      { new: true, select: '-password' }
-    );
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    res.json({ success: true, message: 'User rejected', user });
-  } catch (error) {
-    console.error('Admin reject user error:', error);
-    res.status(500).json({ success: false, message: 'Error rejecting user' });
-  }
-});
-
 // Get all users (for admin purposes)
 app.get('/api/users', async (req, res) => {
   try {
@@ -506,19 +373,19 @@ app.post('/api/blogs', async (req, res) => {
 
     // Only dedupe near-simultaneous double submits (e.g. double click / retries)
     const dedupeSince = new Date(Date.now() - 2000);
-    const recentDuplicate = await Blog.findOne({ signature, createdAt: { $gte: dedupeSince } });
+    const recentDuplicate = await PendingBlog.findOne({ signature, createdAt: { $gte: dedupeSince } });
     if (recentDuplicate) {
       return res.status(200).json({
         success: true,
         deduped: true,
-        message: 'Duplicate submission ignored (already saved)',
-        blog: recentDuplicate
+        message: 'Duplicate submission ignored (already submitted)',
+        submission: recentDuplicate
       });
     }
 
     // Idempotency: if the client sends a requestId, duplicate POSTs will map to the same document.
     if (requestId) {
-      const blog = await Blog.findOneAndUpdate(
+      const submission = await PendingBlog.findOneAndUpdate(
         { requestId },
         {
           $setOnInsert: {
@@ -530,23 +397,23 @@ app.post('/api/blogs', async (req, res) => {
             category,
             author,
             tags: tags || [],
-            status: 'pending'  // Always start as pending
+            status: 'pending'
           }
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
-      return res.status(201).json({
+      return res.status(202).json({
         success: true,
         deduped: false,
-        message: 'Blog submitted for admin approval!',
-        blog
+        message: 'Blog submitted for admin approval',
+        submission
       });
     }
 
     // Fallback dedupe (no requestId): avoid creating two identical posts within 2 seconds.
     const since = new Date(Date.now() - 2000);
-    const existing = await Blog.findOne({
+    const existing = await PendingBlog.findOne({
       title,
       content,
       excerpt,
@@ -558,12 +425,12 @@ app.post('/api/blogs', async (req, res) => {
       return res.status(200).json({
         success: true,
         deduped: true,
-        message: 'Duplicate submission ignored (already saved)',
-        blog: existing
+        message: 'Duplicate submission ignored (already submitted)',
+        submission: existing
       });
     }
 
-    const newBlog = new Blog({
+    const newSubmission = new PendingBlog({
       title,
       content,
       excerpt,
@@ -571,29 +438,29 @@ app.post('/api/blogs', async (req, res) => {
       signature,
       author,
       tags: tags || [],
-      status: 'pending'  // Always start as pending, requires admin approval
+      status: 'pending'
     });
 
-    await newBlog.save();
+    await newSubmission.save();
 
-    return res.status(201).json({
+    return res.status(202).json({
       success: true,
       deduped: false,
-      message: 'Blog submitted for admin approval!',
-      blog: newBlog
+      message: 'Blog submitted for admin approval',
+      submission: newSubmission
     });
   } catch (error) {
     // If a duplicate requestId is inserted concurrently, return the existing blog.
     if (error && error.code === 11000) {
       const requestId = req.get('x-request-id') || req.body.requestId;
       if (requestId) {
-        const existing = await Blog.findOne({ requestId });
+        const existing = await PendingBlog.findOne({ requestId });
         if (existing) {
           return res.status(200).json({
             success: true,
             deduped: true,
-            message: 'Duplicate submission ignored (already saved)',
-            blog: existing
+            message: 'Duplicate submission ignored (already submitted)',
+            submission: existing
           });
         }
       }
@@ -601,7 +468,7 @@ app.post('/api/blogs', async (req, res) => {
     console.error('Create blog error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Error creating blog post' 
+      message: 'Error submitting blog for approval' 
     });
   }
 });
@@ -609,23 +476,7 @@ app.post('/api/blogs', async (req, res) => {
 // Get all blogs
 app.get('/api/blogs', async (req, res) => {
   try {
-    const userEmail = req.query.userEmail;
-    let query;
-    
-    // If userEmail provided, show approved blogs + user's own blogs (any status)
-    if (userEmail) {
-      query = {
-        $or: [
-          { status: 'approved' },
-          { 'author.email': userEmail.toLowerCase() }
-        ]
-      };
-    } else {
-      // Public view: only approved blogs
-      query = { status: 'approved' };
-    }
-    
-    const blogs = await Blog.find(query).sort({ createdAt: -1 });
+    const blogs = await Blog.find({ status: 'approved' }).sort({ createdAt: -1 });
     res.json({
       success: true,
       count: blogs.length,
@@ -637,6 +488,41 @@ app.get('/api/blogs', async (req, res) => {
       success: false, 
       message: 'Error fetching blogs' 
     });
+  }
+});
+
+// Get a user's approved + pending submissions
+app.get('/api/blogs/submissions', async (req, res) => {
+  try {
+    const userEmail = (req.query.userEmail || '').toString().trim().toLowerCase();
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: 'userEmail is required' });
+    }
+
+    const [approvedBlogs, pendingBlogs] = await Promise.all([
+      Blog.find({ 'author.email': userEmail, status: 'approved' }).sort({ createdAt: -1 }),
+      PendingBlog.find({ 'author.email': userEmail, status: 'pending' }).sort({ createdAt: -1 })
+    ]);
+
+    const approved = approvedBlogs.map(blog => ({
+      ...blog.toObject(),
+      status: 'approved'
+    }));
+    const pending = pendingBlogs.map(blog => ({
+      ...blog.toObject(),
+      status: 'pending'
+    }));
+
+    const submissions = [...pending, ...approved].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({
+      success: true,
+      count: submissions.length,
+      submissions
+    });
+  } catch (error) {
+    console.error('Get submissions error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching submissions' });
   }
 });
 
@@ -748,6 +634,33 @@ app.post('/api/blogs/:id/like', async (req, res) => {
     });
   }
 });
+
+// Admin notifications
+app.get('/api/notifications', requireAdmin, async (req, res) => {
+  try {
+    const [pendingBlogs, pendingUsers] = await Promise.all([
+      PendingBlog.countDocuments({ status: 'pending' }),
+      User.countDocuments({ approved: false })
+    ]);
+
+    res.json({
+      success: true,
+      pendingBlogs,
+      pendingUsers
+    });
+  } catch (error) {
+    console.error('Notifications error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching notifications' });
+  }
+});
+
+// Admin routes
+app.use('/api/admin', createAdminRouter({
+  User,
+  Blog,
+  PendingBlog,
+  requireAdmin
+}));
 
 // Catch-all route for single page app - serve blog.html or signuppage.html
 app.get('/', (req, res) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 
-module.exports = function createAdminRouter({ User, Blog, requireAdmin }) {
+module.exports = function createAdminRouter({ User, Blog, PendingBlog, requireAdmin }) {
   const router = express.Router();
 
   // All admin routes require admin key
@@ -68,7 +68,7 @@ module.exports = function createAdminRouter({ User, Blog, requireAdmin }) {
   // Blogs
   router.get('/blogs', async (req, res) => {
     try {
-      const blogs = await Blog.find().sort({ createdAt: -1 });
+      const blogs = await Blog.find({ status: 'approved' }).sort({ createdAt: -1 });
       res.json({ success: true, count: blogs.length, blogs });
     } catch (error) {
       console.error('Admin get blogs error:', error);
@@ -78,7 +78,7 @@ module.exports = function createAdminRouter({ User, Blog, requireAdmin }) {
 
   router.get('/blogs/pending', async (req, res) => {
     try {
-      const blogs = await Blog.find({ status: 'pending' }).sort({ createdAt: -1 });
+      const blogs = await PendingBlog.find({ status: 'pending' }).sort({ createdAt: -1 });
       res.json({ success: true, count: blogs.length, blogs });
     } catch (error) {
       console.error('Admin get pending blogs error:', error);
@@ -88,17 +88,37 @@ module.exports = function createAdminRouter({ User, Blog, requireAdmin }) {
 
   router.post('/blogs/:id/approve', async (req, res) => {
     try {
-      const blog = await Blog.findByIdAndUpdate(
-        req.params.id,
-        { status: 'approved', approvedAt: new Date() },
-        { new: true }
-      );
-
-      if (!blog) {
-        return res.status(404).json({ success: false, message: 'Blog not found' });
+      const pending = await PendingBlog.findById(req.params.id);
+      if (!pending) {
+        return res.status(404).json({ success: false, message: 'Pending blog not found' });
       }
 
-      res.json({ success: true, message: 'Blog approved', blog });
+      const existing = pending.requestId
+        ? await Blog.findOne({ requestId: pending.requestId })
+        : null;
+
+      if (existing) {
+        await PendingBlog.findByIdAndDelete(req.params.id);
+        return res.json({ success: true, message: 'Blog already approved', blog: existing });
+      }
+
+      const approvedBlog = new Blog({
+        title: pending.title,
+        content: pending.content,
+        excerpt: pending.excerpt,
+        category: pending.category,
+        signature: pending.signature,
+        requestId: pending.requestId,
+        author: pending.author,
+        tags: pending.tags || [],
+        status: 'approved',
+        approvedAt: new Date()
+      });
+
+      await approvedBlog.save();
+      await PendingBlog.findByIdAndDelete(req.params.id);
+
+      res.json({ success: true, message: 'Blog approved', blog: approvedBlog });
     } catch (error) {
       console.error('Admin approve blog error:', error);
       res.status(500).json({ success: false, message: 'Error approving blog' });
@@ -107,17 +127,12 @@ module.exports = function createAdminRouter({ User, Blog, requireAdmin }) {
 
   router.post('/blogs/:id/reject', async (req, res) => {
     try {
-      const blog = await Blog.findByIdAndUpdate(
-        req.params.id,
-        { status: 'rejected', approvedAt: null },
-        { new: true }
-      );
-
-      if (!blog) {
-        return res.status(404).json({ success: false, message: 'Blog not found' });
+      const pending = await PendingBlog.findByIdAndDelete(req.params.id);
+      if (!pending) {
+        return res.status(404).json({ success: false, message: 'Pending blog not found' });
       }
 
-      res.json({ success: true, message: 'Blog rejected', blog });
+      res.json({ success: true, message: 'Blog rejected' });
     } catch (error) {
       console.error('Admin reject blog error:', error);
       res.status(500).json({ success: false, message: 'Error rejecting blog' });

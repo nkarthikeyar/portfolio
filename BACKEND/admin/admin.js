@@ -45,28 +45,8 @@ async function loadNotifications() {
     const data = await fetchJson(`${API_URL}/api/notifications`, {
       headers: authHeaders()
     });
-    const pendingBlogs = data.pendingBlogs || 0;
-    const pendingUsers = data.pendingUsers || 0;
-    const totalPending = pendingBlogs + pendingUsers;
-    
-    pendingBlogsCount.textContent = pendingBlogs;
-    pendingUsersCount.textContent = pendingUsers;
-    
-    // Update notification bell badge
-    const badge = document.getElementById('notificationBadge');
-    if (badge) {
-      if (totalPending > 0) {
-        badge.textContent = totalPending;
-        badge.style.display = 'flex';
-        // Play sound on new items
-        if (!window.lastPendingCount || totalPending > window.lastPendingCount) {
-          playNotificationSound();
-        }
-      } else {
-        badge.style.display = 'none';
-      }
-      window.lastPendingCount = totalPending;
-    }
+    pendingBlogsCount.textContent = data.pendingBlogs || 0;
+    pendingUsersCount.textContent = data.pendingUsers || 0;
   } catch (error) {
     console.error('Load notifications error:', error);
   }
@@ -237,96 +217,6 @@ if (savedKey) {
   setKeyStatus('✓ Admin key loaded from session.', false);
   loadAll();
   setInterval(loadNotifications, 5000);
-}
-
-// Notification system
-function showNotification(message, type) {
-  let notification = document.getElementById('notification');
-  if (!notification) {
-    notification = document.createElement('div');
-    notification.id = 'notification';
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 16px 24px;
-      border-radius: 12px;
-      font-weight: 600;
-      z-index: 9999;
-      animation: slideInRight 0.3s ease-out;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    `;
-    document.body.appendChild(notification);
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideInRight {
-        from {
-          transform: translateX(400px);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      @keyframes bellRing {
-        0%, 100% { transform: rotate(0deg); }
-        10% { transform: rotate(15deg); }
-        20% { transform: rotate(-15deg); }
-        30% { transform: rotate(10deg); }
-        40% { transform: rotate(-10deg); }
-        50% { transform: rotate(0deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  notification.textContent = message;
-  
-  if (type === 'success') {
-    notification.style.background = '#10b981';
-    notification.style.color = 'white';
-  } else if (type === 'error') {
-    notification.style.background = '#ef4444';
-    notification.style.color = 'white';
-  } else if (type === 'loading') {
-    notification.style.background = '#3b82f6';
-    notification.style.color = 'white';
-  }
-
-  notification.style.display = 'block';
-
-  if (type !== 'loading') {
-    setTimeout(() => {
-      notification.style.display = 'none';
-    }, 3000);
-  }
-}
-
-// Notification sound function
-function playNotificationSound() {
-  try {
-    if (window.AudioContext || window.webkitAudioContext) {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.2);
-    }
-  } catch (error) {
-    console.log('Sound notification disabled');
-  }
 }
 
 window.approveUser = approveUser;
