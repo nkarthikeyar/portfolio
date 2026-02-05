@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bloghub-backend
+    env: node
+    buildCommand: npm install --prefix BACKEND
+    startCommand: npm start --prefix BACKEND
+    autoDeploy: true
