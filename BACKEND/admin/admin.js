@@ -93,7 +93,8 @@ function renderBlogs(blogs) {
             <p><strong style="color: #3b82f6;">👤 From:</strong> ${author}</p>
             <p><strong style="color: #3b82f6;">📧 Email:</strong> ${email}</p>
             <p><strong style="color: #3b82f6;">🏷️ Category:</strong> ${blog.category || 'N/A'}</p>
-            <p><strong style="color: #3b82f6;">📅 Submitted:</strong> ${createdDate}</p>
+            <p><strong style="color: #3b82f6;">� Keyword:</strong> ${blog.approvalKeyword || '—'}</p>
+            <p><strong style="color: #3b82f6;">�📅 Submitted:</strong> ${createdDate}</p>
             <p><strong style="color: #3b82f6;">📝 Preview:</strong> ${blog.excerpt?.substring(0, 80) || 'No excerpt'}...</p>
           </div>
         </div>
@@ -223,3 +224,43 @@ window.approveUser = approveUser;
 window.rejectUser = rejectUser;
 window.approveBlog = approveBlog;
 window.rejectBlog = rejectBlog;
+
+function showNotification(message, type) {
+  let toast = document.getElementById('toast-notification');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+  }
+
+  if (type === 'success') {
+    toast.style.background = '#10b981';
+    toast.style.color = 'white';
+  } else if (type === 'error') {
+    toast.style.background = '#ef4444';
+    toast.style.color = 'white';
+  } else {
+    toast.style.background = '#3b82f6';
+    toast.style.color = 'white';
+  }
+
+  toast.textContent = message;
+  toast.style.opacity = '1';
+
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 3000);
+}
