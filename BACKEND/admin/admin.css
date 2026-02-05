@@ -20,6 +20,31 @@ header {
   text-align: center;
 }
 
+.admin-links {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.admin-link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #e2e8f0;
+  text-decoration: none;
+  border: 1px solid #334155;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s, border 0.2s;
+}
+
+.admin-link:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
 h1 {
   margin: 0 0 6px;
   font-size: 28px;
